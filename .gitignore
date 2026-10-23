@@ -1,10 +1,12 @@
 node_modules/
+frontend/node_modules/
 .env
 uploads/*
 !uploads/.gitkeep
 backend/uploads/*
 !backend/uploads/.gitkeep
 dist/
+frontend/dist/
 coverage/
 .DS_Store
 *.log
