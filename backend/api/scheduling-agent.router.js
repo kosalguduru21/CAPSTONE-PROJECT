@@ -23,7 +23,14 @@ schedulingAgentRouter.post(
   "/",
   requireRole("property_manager", "admin"),
   async (req, res) => {
-    const { propertyId, instruction } = req.body;
+    let { propertyId, instruction } = req.body;
+
+    // Automatically fallback to manager's authorized property scope if propertyId is not explicitly specified
+    if (!propertyId && req.user.propertyScope?.length > 0) {
+      propertyId = req.user.propertyScope[0].toString();
+    } else if (!propertyId && req.user.residentPropertyId) {
+      propertyId = req.user.residentPropertyId.toString();
+    }
 
     if (!propertyId || !Types.ObjectId.isValid(propertyId)) {
       const error = new Error("Valid Property ID is required for scheduling agent.");

@@ -20,11 +20,16 @@ export const DEMO_CREDENTIALS = {
   vendor_technician: { email: 'tech.mario@apexplumbing.com', password: 'Password123!', label: 'Vendor Technician (Mario Rossi - Plumbing)' },
 };
 
-const normalizeUser = (raw: any): User => ({
-  ...raw,
-  id: raw._id || raw.id,
-  fullName: raw.name || raw.fullName || raw.email,
-});
+const normalizeUser = (raw: any): User => {
+  const scope = raw.propertyScope || raw.propertyIds || (raw.residentPropertyId ? [raw.residentPropertyId] : []);
+  return {
+    ...raw,
+    id: raw._id || raw.id,
+    fullName: raw.name || raw.fullName || raw.email,
+    propertyScope: scope,
+    propertyIds: scope,
+  };
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);

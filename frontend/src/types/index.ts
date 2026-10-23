@@ -8,6 +8,8 @@ export interface User {
   phoneNumber?: string;
   emailVerified: boolean;
   propertyIds?: string[];
+  propertyScope?: string[];
+  residentPropertyId?: string;
   unitId?: string | {
     _id: string;
     unitNumber: string;

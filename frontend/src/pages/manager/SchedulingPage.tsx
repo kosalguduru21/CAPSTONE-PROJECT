@@ -18,8 +18,10 @@ import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { api } from '../../api/client';
 import { SchedulingProposal, WorkOrder } from '../../types';
 import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
 export const SchedulingPage: React.FC = () => {
+  const { user } = useAuth();
   const { addToast } = useNotifications();
   const [scheduledOrders, setScheduledOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +52,9 @@ export const SchedulingPage: React.FC = () => {
   const handleGenerateProposal = async () => {
     setGenerating(true);
     try {
+      const propertyId = user?.propertyScope?.[0] || user?.propertyIds?.[0];
       const data = await api.post('/api/scheduling-agent', {
+        propertyId,
         timeframe: 'next_week',
       });
 

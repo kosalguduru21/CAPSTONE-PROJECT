@@ -137,6 +137,45 @@ export async function runSchedulingAgent({
   const conflictCount = structuredProposalData.conflicts.length;
   summary = `Scheduling Proposal Summary: Formulated ${count} feasible non-emergency maintenance visit(s). ${conflictCount > 0 ? `${conflictCount} scheduling conflict(s) identified.` : "All eligible requests matched to available technician windows."} Awaiting explicit manager confirmation.`;
 
+  // Format proposals for frontend presentation
+  const formattedScheduledProposals = structuredProposalData.feasibleProposals.map((p) => {
+    const startDate = new Date(p.proposedStartTime);
+    const endDate = new Date(p.proposedEndTime);
+    const dateStr = !isNaN(startDate.getTime())
+      ? startDate.toISOString().split("T")[0]
+      : "Upcoming";
+    const timeSlotStr = !isNaN(startDate.getTime()) && !isNaN(endDate.getTime())
+      ? `${startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${endDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`
+      : "Standard window";
+
+    return {
+      ...p,
+      orderId: p.workOrderId,
+      orderNumber: p.reference,
+      unitNumber: p.unit,
+      suggestedTechnician: {
+        id: p.technicianId,
+        name: p.technicianName,
+        vendorName: p.vendorName,
+      },
+      proposedSlot: {
+        date: dateStr,
+        timeSlot: timeSlotStr,
+      },
+    };
+  });
+
+  const formattedToolExecutions = toolExecutions.map((t) => ({
+    toolName: t.name,
+    status: t.status,
+    durationMs: t.durationMs,
+    summary: t.error ? `Error: ${t.error}` : `Executed ${t.name} successfully`,
+  }));
+
+  const formattedConflicts = structuredProposalData.conflicts.map((c) =>
+    typeof c === "string" ? { orderId: "", orderNumber: "Notice", reason: c } : c,
+  );
+
   // Save auditable AgentRun record in MongoDB
   const agentRun = await AgentRunModel.create({
     proposalId,
@@ -157,10 +196,13 @@ export async function runSchedulingAgent({
     proposalId,
     status: "proposed",
     summary,
+    propertyId,
     proposedVisits: structuredProposalData.feasibleProposals,
-    conflicts: structuredProposalData.conflicts,
+    scheduledProposals: formattedScheduledProposals,
+    conflicts: formattedConflicts,
     unresolvedConstraints: structuredProposalData.unresolvedConstraints,
     toolsUsed: toolExecutions,
+    toolExecutions: formattedToolExecutions,
     agentRunId: agentRun._id,
   };
 }
