@@ -11,7 +11,7 @@ import { authenticateSession } from "../middlewares/auth.middleware.js";
 import { requireRole, enforcePropertyScope } from "../middlewares/authorize.middleware.js";
 import { uploadMiddleware } from "../middlewares/multer.middleware.js";
 import { logAuditEvent } from "../services/audit.service.js";
-import { indexWorkOrderEmbedding } from "../services/related-case-search.service.js";
+import { indexWorkOrderEmbedding, findRelatedWorkOrders } from "../services/related-case-search.service.js";
 import {
   createWorkOrderSchema,
   completionReviewSchema,
@@ -283,6 +283,42 @@ workOrderRouter.get("/:id", async (req, res) => {
     success: true,
     data: {
       workOrder: order,
+    },
+  });
+});
+
+/**
+ * GET /api/work-orders/:id/related-cases
+ * Retrieve semantically related maintenance complaints within the property.
+ */
+workOrderRouter.get("/:id/related-cases", async (req, res) => {
+  const { id } = req.params;
+
+  if (!Types.ObjectId.isValid(id)) {
+    const error = new Error("Invalid Work Order ID");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const order = await WorkOrderModel.findById(id);
+  if (!order) {
+    const error = new Error("Work order not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const matches = await findRelatedWorkOrders(
+    order._id,
+    order.propertyId,
+    { limit: 5, minSimilarity: 0.5 },
+  );
+
+  res.status(200).json({
+    success: true,
+    data: {
+      workOrderId: order._id,
+      reference: order.reference,
+      relatedCases: matches,
     },
   });
 });
