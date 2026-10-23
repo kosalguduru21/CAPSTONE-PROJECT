@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "Apartment Maintenance Operations API",
+    "_postman_id": "a90a2d21-f04b-4493-bc42-8e1241a7d620",
+    "description": "Postman API Collection for Apartment Maintenance Operations full-stack capstone project.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login - Manager",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"manager.sarah@grandheights.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Login - Resident",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"resident.alex@grandheights.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Work Orders",
+      "item": [
+        {
+          "name": "List Work Orders",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/work-orders", "host": ["{{baseUrl}}"], "path": ["api", "work-orders"] }
+          }
+        },
+        {
+          "name": "Create Work Order",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Kitchen sink drain dripping slowly\",\n  \"description\": \"Intermittent leak under the double sink bowl. Water collects in pan.\",\n  \"category\": \"plumbing\",\n  \"priority\": \"Normal\",\n  \"preferredAccessWindows\": [{\"date\": \"2026-10-28\", \"timeSlot\": \"Morning (8am-12pm)\"}]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/work-orders", "host": ["{{baseUrl}}"], "path": ["api", "work-orders"] }
+          }
+        },
+        {
+          "name": "Get Work Order Details",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}", "host": ["{{baseUrl}}"], "path": ["api", "work-orders", "{{workOrderId}}"] }
+          }
+        },
+        {
+          "name": "Assign Vendor (Manager)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vendorId\": \"{{vendorId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}/assignment", "host": ["{{baseUrl}}"], "path": ["api", "work-orders", "{{workOrderId}}", "assignment"] }
+          }
+        },
+        {
+          "name": "Completion Review / Reopen",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"satisfied\": false,\n  \"reopenReason\": \"Pipe still dripping after repair.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}/completion-review", "host": ["{{baseUrl}}"], "path": ["api", "work-orders", "{{workOrderId}}", "completion-review"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Subsystem",
+      "item": [
+        {
+          "name": "Grounded Maintenance Chat (RAG)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Who is responsible for fixing a leaking pipe under the sink?\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/maintenance-chat", "host": ["{{baseUrl}}"], "path": ["api", "maintenance-chat"] }
+          }
+        },
+        {
+          "name": "Related-Case Discovery (Vector Search)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/work-orders/{{workOrderId}}/related-cases", "host": ["{{baseUrl}}"], "path": ["api", "work-orders", "{{workOrderId}}", "related-cases"] }
+          }
+        },
+        {
+          "name": "Run Scheduling Agent",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timeframe\": \"next_week\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/scheduling-agent", "host": ["{{baseUrl}}"], "path": ["api", "scheduling-agent"] }
+          }
+        },
+        {
+          "name": "Confirm Proposed Schedule (Manager)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proposalId\": \"{{proposalId}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/api/scheduling-agent/confirm", "host": ["{{baseUrl}}"], "path": ["api", "scheduling-agent", "confirm"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "workOrderId", "value": "6adba8ddd5279ac23e63a9ed" },
+    { "key": "vendorId", "value": "6adba8dcd5279ac23e63a9d9" },
+    { "key": "proposalId", "value": "prop-12345" }
+  ]
+}
