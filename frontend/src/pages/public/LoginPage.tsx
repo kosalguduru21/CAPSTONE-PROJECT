@@ -15,7 +15,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onNavigateRegister, onNavi
   const { login } = useAuth();
   const { addToast } = useNotifications();
 
-  const [email, setEmail] = useState('manager.sarah@grandheights.com');
+  const [email, setEmail] = useState('manager.sunset@apartments.com');
   const [password, setPassword] = useState('Password123!');
   const [loading, setLoading] = useState(false);
 

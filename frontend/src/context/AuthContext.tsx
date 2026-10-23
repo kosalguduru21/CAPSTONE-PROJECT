@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api, setCsrfToken } from '../api/client';
+import { api, setCsrfToken, setSessionId } from '../api/client';
 import { User, UserRole } from '../types';
 
 interface AuthContextType {
@@ -15,10 +15,16 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const DEMO_CREDENTIALS = {
-  property_manager: { email: 'manager.sarah@grandheights.com', password: 'Password123!', label: 'Property Manager (Sarah Jenkins)' },
-  resident: { email: 'resident.alex@grandheights.com', password: 'Password123!', label: 'Resident (Alex Rivera - Unit 101)' },
-  vendor_technician: { email: 'tech.mario@quickflow.com', password: 'Password123!', label: 'Vendor Technician (Mario Rossi - Plumbing)' },
+  property_manager: { email: 'manager.sunset@apartments.com', password: 'Password123!', label: 'Property Manager (Sarah Jenkins)' },
+  resident: { email: 'resident.bob@sunset.com', password: 'Password123!', label: 'Resident (Bob Martinez - Unit 101)' },
+  vendor_technician: { email: 'tech.mario@apexplumbing.com', password: 'Password123!', label: 'Vendor Technician (Mario Rossi - Plumbing)' },
 };
+
+const normalizeUser = (raw: any): User => ({
+  ...raw,
+  id: raw._id || raw.id,
+  fullName: raw.name || raw.fullName || raw.email,
+});
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -26,13 +32,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchCurrentUser = async (): Promise<User | null> => {
     try {
-      const data = await api.get('/api/auth/me');
-      if (data?.user) {
-        setUser(data.user);
-        if (data.csrfToken) {
-          setCsrfToken(data.csrfToken);
+      const res = await api.get('/api/auth/me');
+      const userData = res?.data?.user || res?.user;
+      if (userData) {
+        const normalized = normalizeUser(userData);
+        setUser(normalized);
+        const token = res?.data?.csrfToken || res?.csrfToken;
+        if (token) {
+          setCsrfToken(token);
         }
-        return data.user;
+        return normalized;
       }
       setUser(null);
       return null;
@@ -51,12 +60,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password = 'Password123!'): Promise<User> => {
     setLoading(true);
     try {
-      const data = await api.post('/api/auth/login', { email, password });
-      setUser(data.user);
-      if (data.csrfToken) {
-        setCsrfToken(data.csrfToken);
+      const res = await api.post('/api/auth/login', { email, password });
+      const userData = res?.data?.user || res?.user;
+      if (!userData) {
+        throw new Error(res?.message || 'Authentication succeeded but user payload is missing.');
       }
-      return data.user;
+      const normalized = normalizeUser(userData);
+      setUser(normalized);
+      const token = res?.data?.csrfToken || res?.csrfToken;
+      if (token) {
+        setCsrfToken(token);
+      }
+      return normalized;
     } finally {
       setLoading(false);
     }
@@ -71,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setUser(null);
       setCsrfToken(null);
+      setSessionId(null);
       setLoading(false);
     }
   };

@@ -1,12 +1,29 @@
 // API client for Apartment Maintenance Operations
 
-let csrfToken: string | null = null;
+let csrfToken: string | null = typeof window !== 'undefined' ? localStorage.getItem('app_csrf_token') : null;
+let sessionId: string | null = typeof window !== 'undefined' ? localStorage.getItem('app_session_id') : null;
 
 export const setCsrfToken = (token: string | null) => {
   csrfToken = token;
+  if (token) {
+    localStorage.setItem('app_csrf_token', token);
+  } else {
+    localStorage.removeItem('app_csrf_token');
+  }
 };
 
 export const getCsrfToken = () => csrfToken;
+
+export const setSessionId = (token: string | null) => {
+  sessionId = token;
+  if (token) {
+    localStorage.setItem('app_session_id', token);
+  } else {
+    localStorage.removeItem('app_session_id');
+  }
+};
+
+export const getSessionId = () => sessionId;
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -33,6 +50,11 @@ export async function apiRequest<T = any>(endpoint: string, options: RequestOpti
 
   if (csrfToken) {
     defaultHeaders['x-csrf-token'] = csrfToken;
+  }
+
+  if (sessionId) {
+    defaultHeaders['x-session-id'] = sessionId;
+    defaultHeaders['Authorization'] = `Bearer ${sessionId}`;
   }
 
   // Only set Content-Type to application/json if body is not FormData
@@ -69,9 +91,15 @@ export async function apiRequest<T = any>(endpoint: string, options: RequestOpti
     throw error;
   }
 
-  // Update CSRF token if returned in headers or data
-  if (data?.csrfToken) {
-    setCsrfToken(data.csrfToken);
+  // Update session and CSRF tokens if returned in data or headers
+  const newCsrf = data?.data?.csrfToken || data?.csrfToken;
+  if (newCsrf) {
+    setCsrfToken(newCsrf);
+  }
+
+  const newSessionId = data?.data?.sessionId || data?.sessionId;
+  if (newSessionId) {
+    setSessionId(newSessionId);
   }
 
   return data;

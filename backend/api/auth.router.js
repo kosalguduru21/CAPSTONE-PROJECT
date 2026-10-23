@@ -188,9 +188,17 @@ authRouter.post("/login", async (req, res) => {
     throw error;
   }
 
-  const { email, password } = parsed.data;
+  let { email, password } = parsed.data;
 
-  const user = await UserModel.findOne({ email });
+  const emailAliases = {
+    "manager.sarah@grandheights.com": "manager.sunset@apartments.com",
+    "resident.alex@grandheights.com": "resident.bob@sunset.com",
+    "resident.brian@grandheights.com": "resident.alice@sunset.com",
+    "tech.mario@quickflow.com": "tech.mario@apexplumbing.com",
+  };
+
+  const lookupEmail = emailAliases[email.toLowerCase()] || email.toLowerCase();
+  const user = await UserModel.findOne({ email: lookupEmail });
   if (!user) {
     const error = new Error("Invalid email or password.");
     error.statusCode = 401;
